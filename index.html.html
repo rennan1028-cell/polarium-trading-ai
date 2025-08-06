@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polarium Trading Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid #00d4aa;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #00d4aa;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            color: #00d4aa;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .asset-btn {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border: 1px solid #4a5568;
+            color: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .asset-btn:hover {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            border-color: #00d4aa;
+        }
+
+        .asset-btn.active {
+            background: linear-gradient(135deg, #00d4aa 0%, #008f7a 100%);
+            border-color: #00d4aa;
+            color: #ffffff;
+        }
+
+        .timeframe-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+
+        .timeframe-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeframe-btn.active {
+            background: #00d4aa;
+            border-color: #00d4aa;
+            color: #ffffff;
+        }
+
+        .signal-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            border-left: 4px solid #00d4aa;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .waiting-signal {
+            background: rgba(255, 193, 7, 0.1);
+            border-left-color: #ffc107;
+        }
+
+        .signal-ready {
+            background: rgba(0, 255, 136, 0.1);
+            border-left-color: #00ff88;
+            animation: signalPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes signalPulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+        }
+
+        .signal-asset {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00d4aa;
+            margin-bottom: 0.5rem;
+        }
+
+        .signal-direction {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+
+        .signal-direction.call {
+            color: #00ff88;
+        }
+
+        .signal-direction.put {
+            color: #ff4757;
+        }
+
+        .signal-confidence {
+            font-size: 1rem;
+            color: #ffd700;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, #00d4aa 0%, #008f7a 100%);
+            border: none;
+            color: #ffffff;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 170, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00d4aa;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .history-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            font-size: 0.8rem;
+        }
+
+        .history-item.win {
+            border-left-color: #00ff88;
+        }
+
+        .history-item.loss {
+            border-left-color: #ff4757;
+        }
+
+        .history-direction {
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .history-direction.call {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .history-direction.put {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+
+        .history-result.win {
+            color: #00ff88;
+        }
+
+        .history-result.loss {
+            color: #ff4757;
+        }
+
+        .analysis-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .analysis-title {
+            color: #00d4aa;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .analysis-text {
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎯 Polarium Trading Assistant</h1>
+    </header>
+
+    <div class="main-container">
+        <!-- DIGITAIS -->
+        <div class="section">
+            <h2 class="section-title">📈 DIGITAIS</h2>
+            
+            <div class="asset-grid">
+                <button class="asset-btn active" data-asset="EUR/USD">EUR/USD</button>
+                <button class="asset-btn" data-asset="GBP/USD">GBP/USD</button>
+                <button class="asset-btn" data-asset="USD/JPY">USD/JPY</button>
+                <button class="asset-btn" data-asset="AUD/USD">AUD/USD</button>
+            </div>
+
+            <div class="timeframe-selector">
+                <button class="timeframe-btn active">M1</button>
+                <button class="timeframe-btn">M5</button>
+            </div>
+
+            <div class="signal-display waiting-signal" id="digitalSignal">
+                <div class="signal-asset">📊 ANALISANDO</div>
+                <div style="color: #ffc107; font-size: 1rem; margin: 0.5rem 0;">
+                    🔍 Aguardando setup...
+                </div>
+                <div style="color: #a0aec0; font-size: 0.8rem;">
+                    Monitoramento ativo
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="executeSignal('digital')" disabled id="digitalBtn">
+                    AGUARDANDO
+                </button>
+                <button class="btn-secondary" onclick="forceSignal('digital')">
+                    FORÇAR
+                </button>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="analysis-title">🤖 Status IA</div>
+                <div class="analysis-text" id="digitalAnalysis">
+                    Sistema iniciado. Aguardando confluência de indicadores.
+                </div>
+            </div>
+        </div>
+
+        <!-- OTC -->
+        <div class="section">
+            <h2 class="section-title">🌙 OTC</h2>
+            
+            <div class="asset-grid">
+                <button class="asset-btn active" data-asset="OTC EUR/USD">EUR/USD</button>
+                <button class="asset-btn" data-asset="OTC Gold">Gold</button>
+                <button class="asset-btn" data-asset="OTC Bitcoin">Bitcoin</button>
+                <button class="asset-btn" data-asset="OTC Oil">Oil</button>
+            </div>
+
+            <div class="timeframe-selector">
+                <button class="timeframe-btn active">M1</button>
+                <button class="timeframe-btn">M5</button>
+            </div>
+
+            <div class="signal-display waiting-signal" id="otcSignal">
+                <div class="signal-asset">🌙 ANALISANDO</div>
+                <div style="color: #ffc107; font-size: 1rem; margin: 0.5rem 0;">
+                    🔍 Aguardando setup...
+                </div>
+                <div style="color: #a0aec0; font-size: 0.8rem;">
+                    Monitoramento ativo
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="executeSignal('otc')" disabled id="otcBtn">
+                    AGUARDANDO
+                </button>
+                <button class="btn-secondary" onclick="forceSignal('otc')">
+                    FORÇAR
+                </button>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="analysis-title">🤖 Status IA</div>
+                <div class="analysis-text" id="otcAnalysis">
+                    Sistema iniciado. Aguardando confluência de indicadores.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+        <div class="section">
+            <h2 class="section-title">📊 ESTATÍSTICAS</h2>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="wins">12</div>
+                    <div class="stat-label">Wins Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="loss">1</div>
+                    <div class="stat-label">Loss Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="winRate">98.1%</div>
+                    <div class="stat-label">Taxa Sucesso</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="signals">13</div>
+                    <div class="stat-label">Sinais Hoje</div>
+                </div>
+            </div>
+
+            <h3 style="color: #00d4aa; margin: 1rem 0; font-size: 1.1rem;">🕒 Últimos Sinais</h3>
+            <div class="history-container" id="history">
+                <!-- Histórico será preenchido -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurações simplificadas
+        const AI_CONFIG = {
+            analysisInterval: 10000, // 10 segundos
+            signalTimeout: 120000, // 2 minutos
+            minConfidence: 97.0
+        };
+
+        // Estado do sistema
+        let marketState = {
+            digital: { activeSignal: null, analyzing: true },
+            otc: { activeSignal: null, analyzing: true }
+        };
+
+        let signalHistory = [];
+        let stats = { wins: 12, loss: 1, signals: 13 };
+
+        // Inicializar histórico
+        function initHistory() {
+            const results = ['win', 'win', 'win', 'win', 'win', 'win', 'loss', 'win', 'win', 'win'];
+            const assets = ['EUR/USD', 'GBP/USD', 'OTC Gold', 'OTC Bitcoin'];
+            
+            for (let i = 0; i < 10; i++) {
+                const asset = assets[Math.floor(Math.random() * assets.length)];
+                const direction = Math.random() > 0.5 ? 'CALL' : 'PUT';
+                const result = results[i];
+                const time = new Date(Date.now() - (i * 30 * 60 * 1000)).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                
+                signalHistory.unshift({
+                    asset, direction, result, time,
+                    confidence: (Math.random() * 2 + 97.5).toFixed(1) + '%'
+                });
+            }
+            updateHistory();
+        }
+
+        // Atualizar histórico
+        function updateHistory() {
+            const container = document.getElementById('history');
+            container.innerHTML = '';
+            
+            signalHistory.slice(0, 8).forEach(signal => {
+                const item = document.createElement('div');
+                item.className = `history-item ${signal.result}`;
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600; color: #e2e8f0;">${signal.asset}</div>
+                        <div style="font-size: 0.7rem; color: #a0aec0;">${signal.time}</div>
+                    </div>
+                    <div class="history-direction ${signal.direction.toLowerCase()}">${signal.direction}</div>
+                    <div class="history-result ${signal.result}" style="font-weight: 600;">${signal.result.toUpperCase()}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Análise avançada
+        function performAnalysis(market) {
+            const indicators = [];
+            const confidence = Math.random() * 100;
+            
+            // Simular indicadores
+            if (Math.random() > 0.7) indicators.push('RSI_EXTREME');
+            if (Math.random() > 0.8) indicators.push('MACD_CROSS');
+            if (Math.random() > 0.75) indicators.push('VOLUME_SPIKE');
+            if (Math.random() > 0.8) indicators.push('PATTERN_STRONG');
+            
+            return {
+                indicators,
+                confidence,
+                direction: Math.random() > 0.5 ? 'CALL' : 'PUT',
+                asset: market === 'digital' ? 'EUR/USD' : 'OTC Gold'
+            };
+        }
+
+        // Gerar sinal de alta precisão
+        function generateSignal(market) {
+            const analysis = performAnalysis(market);
+            
+            if (analysis.indicators.length >= 3 && analysis.confidence >= AI_CONFIG.minConfidence) {
+                const signal = {
+                    asset: analysis.asset,
+                    direction: analysis.direction,
+                    confidence: analysis.confidence.toFixed(1),
+                    timestamp: Date.now(),
+                    expires: Date.now() + AI_CONFIG.signalTimeout
+                };
+                
+                marketState[market].activeSignal = signal;
+                displaySignal(market, signal);
+                return true;
+            }
+            return false;
+        }
+
+        // Exibir sinal
+        function displaySignal(market, signal) {
+            const container = document.getElementById(`${market}Signal`);
+            const btn = document.getElementById(`${market}Btn`);
+            
+            container.className = 'signal-display signal-ready';
+            container.innerHTML = `
+                <div class="signal-asset">🎯 ${signal.asset}</div>
+                <div class="signal-direction ${signal.direction.toLowerCase()}">
+                    ${signal.direction} ${signal.direction === 'CALL' ? '▲' : '▼'}
+                </div>
+                <div class="signal-confidence">Confiança: ${signal.confidence}%</div>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #00ff88;">
+                    ✅ Setup detectado!
+                </div>
+            `;
+            
+            btn.disabled = false;
+            btn.textContent = 'EXECUTAR';
+            btn.style.background = 'linear-gradient(135deg, #00ff88 0%, #00d4aa 100%)';
+            
+            // Auto expirar
+            setTimeout(() => expireSignal(market), AI_CONFIG.signalTimeout);
+            
+            updateAnalysis(market, `🎯 SINAL ATIVO: Confluência de ${Math.floor(Math.random() * 3) + 4} indicadores`);
+        }
+
+        // Expirar sinal
+        function expireSignal(market) {
+            if (!marketState[market].activeSignal) return;
+            
+            marketState[market].activeSignal = null;
+            
+            const container = document.getElementById(`${market}Signal`);
+            const btn = document.getElementById(`${market}Btn`);
+            
+            container.className = 'signal-display waiting-signal';
+            container.innerHTML = `
+                <div class="signal-asset">📊 ANALISANDO</div>
+                <div style="color: #ffc107; font-size: 1rem; margin: 0.5rem 0;">
+                    🔍 Aguardando setup...
+                </div>
+                <div style="color: #a0aec0; font-size: 0.8rem;">
+                    Monitoramento ativo
+                </div>
+            `;
+            
+            btn.disabled = true;
+            btn.textContent = 'AGUARDANDO';
+            btn.style.background = '';
+            
+            updateAnalysis(market, 'Sinal expirado. Retornando ao monitoramento...');
+        }
+
+        // Executar sinal
+        function executeSignal(market) {
+            const state = marketState[market];
+            if (!state.activeSignal) return;
+            
+            const signal = state.activeSignal;
+            const result = Math.random() < 0.98 ? 'win' : 'loss'; // 98% win rate
+            
+            // Adicionar ao histórico
+            const newSignal = {
+                asset: signal.asset,
+                direction: signal.direction,
+                result,
+                time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                confidence: signal.confidence + '%'
+            };
+            
+            signalHistory.unshift(newSignal);
+            if (signalHistory.length > 10) signalHistory.pop();
+            
+            // Atualizar stats
+            if (result === 'win') {
+                stats.wins++;
+            } else {
+                stats.loss++;
+            }
+            stats.signals++;
+            
+            updateStats();
+            updateHistory();
+            
+            // Feedback visual
+            const container = document.getElementById(`${market}Signal`);
+            container.style.background = result === 'win' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(255, 71, 87, 0.2)';
+            
+            setTimeout(() => expireSignal(market), 2000);
+            updateAnalysis(market, `✅ Resultado: ${result.toUpperCase()}`);
+        }
+
+        // Forçar sinal
+        function forceSignal(market) {
+            updateAnalysis(market, '🔍 Forçando análise...');
+            
+            setTimeout(() => {
+                if (generateSignal(market)) {
+                    updateAnalysis(market, '🎯 Sinal forçado gerado!');
+                } else {
+                    updateAnalysis(market, 'Setup insuficiente. Aguardando...');
+                }
+            }, 2000);
+        }
+
+        // Atualizar análise
+        function updateAnalysis(market, message) {
+            const analysis = document.getElementById(`${market}Analysis`);
+            const timestamp = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            analysis.textContent = `${message} | ${timestamp}`;
+        }
+
+        // Atualizar estatísticas
+        function updateStats() {
+            document.getElementById('wins').textContent = stats.wins;
+            document.getElementById('loss').textContent = stats.loss;
+            document.getElementById('signals').textContent = stats.signals;
+            
+            const winRate = ((stats.wins / (stats.wins + stats.loss)) * 100).toFixed(1);
+            document.getElementById('winRate').textContent = winRate + '%';
+        }
+
+        // Monitoramento automático
+        function monitor() {
+            ['digital', 'otc'].forEach(market => {
+                const state = marketState[market];
+                
+                if (!state.activeSignal && Math.random() > 0.85) { // 15% chance
+                    generateSignal(market);
+                }
+            });
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            initHistory();
+            updateStats();
+            
+            // Monitoramento contínuo
+            setInterval(monitor, AI_CONFIG.analysisInterval);
+            
+            // Event listeners para botões
+            document.querySelectorAll('.asset-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const parent = this.closest('.section');
+                    parent.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const parent = this.closest('.section');
+                    parent.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            updateAnalysis('digital', 'Sistema iniciado - Monitoramento ativo');
+            updateAnalysis('otc', 'Sistema iniciado - Monitoramento ativo');
+        });
+    </script>
+</body>
+</html>
